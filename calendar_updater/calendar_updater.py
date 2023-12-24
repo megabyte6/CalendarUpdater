@@ -1,10 +1,41 @@
 import concurrent.futures
 import json
+import os.path
 
 import google_api
 import homebase
 import my_studio
 from code_ninjas import CodeNinjasClass, get_class_from_time
+
+
+def create_settings_file() -> None:
+    """
+    Creates the settings.json file.
+    """
+
+    settings = {
+        "myStudio": {
+            "username": "",
+            "password": "",
+        },
+        "homebase": {
+            "username": "",
+            "password": "",
+        },
+        "googleAPI": {
+            "scopes": ["https://www.googleapis.com/auth/calendar.events"],
+            "calendarID": "primary",
+            "secretsFile": "credentials.json",
+            "tokenFile": "token.json",
+        },
+        "students": {
+            "unity": [],
+            "focus": [],
+        },
+    }
+
+    with open("settings.json", "w") as settings_file:
+        json.dump(settings, settings_file, indent=4)
 
 
 def combine_duplicate_classes(*classes: CodeNinjasClass) -> list[CodeNinjasClass]:
@@ -37,6 +68,10 @@ def main(headless_browser: bool = True, keep_chrome_open: bool = False) -> None:
         keep_chrome_open: Whether to keep the Chrome window open after the program is done.
     """
 
+    if not os.path.exists("settings.json"):
+        create_settings_file()
+        print("Please fill out the settings.json file and run again.")
+        return
     with open("settings.json", "r") as settings_file:
         settings = json.load(settings_file)
 
@@ -56,21 +91,19 @@ def main(headless_browser: bool = True, keep_chrome_open: bool = False) -> None:
             headless_browser=headless_browser,
             keep_chrome_open=keep_chrome_open,
         )
-        # homebase_future = executor.submit(
-        #     homebase.read_data_from_homebase,
-        #     username=settings["homebase"]["username"],
-        #     password=settings["homebase"]["password"],
-        #     headless_browser=headless_browser,
-        #     keep_chrome_open=keep_chrome_open,
-        # )
+        homebase_future = executor.submit(
+            homebase.read_data_from_homebase,
+            username=settings["homebase"]["username"],
+            password=settings["homebase"]["password"],
+            headless_browser=headless_browser,
+            keep_chrome_open=keep_chrome_open,
+        )
 
         # Wait for functions to complete.
-        # concurrent.futures.wait([mystudio_future, homebase_future])
-        concurrent.futures.wait([mystudio_future])
+        concurrent.futures.wait([mystudio_future, homebase_future])
 
         create_classes, jr_classes = mystudio_future.result()
-        # homebase_classes = homebase_future.result()
-        homebase_classes = []
+        homebase_classes = homebase_future.result()
 
     google_api.add_classes_to_calendar(
         credentials=creds,
