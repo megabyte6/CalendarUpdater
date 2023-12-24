@@ -1,0 +1,11 @@
+# Python
+.venv
+__pycache__
+
+# App runtime data
+settings.json
+secret.json
+token.json
+
+# VSCode
+.vscode
