@@ -189,7 +189,7 @@ def read_data_from_mystudio(
     # Hover over the sidebar menu to access submenu
     hover(driver, element(driver, selector="#operations > a > span", timeout=10))
     # Navigate to the class schedule page
-    element(driver, selector="#sub_menu_class_appt_cal").click()
+    element(driver, selector="#sub_menu_class_appt_cal", timeout=5).click()
 
     create_classes: list[CodeNinjasClass] = []
     # Check if there are any CREATE classes today

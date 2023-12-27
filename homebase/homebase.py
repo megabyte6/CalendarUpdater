@@ -1,5 +1,7 @@
-from selenium.webdriver import Chrome, ChromeOptions
 from datetime import time
+
+from selenium.webdriver import Chrome, ChromeOptions
+
 from code_ninjas import Sensei
 from selenium_utils import element, elements
 
@@ -93,19 +95,21 @@ def read_data_from_homebase(
             "div.Box.Box--row.ShiftCard.ShiftCard--card > div.Box.Box--ellipsis > div > "
             "div.Box.Box--row.Box--align-items-center.Box--justify-content-start.ShiftCard__name_and_role > "
             "div:nth-child(1) > span",
-            timeout=60,
+            timeout=10,
+            wait_until_visible=False,
         )
     ]
     sensei_shift_times = [
         time.text
         for time in elements(
             driver,
-            selector="#react-app-root > div > div > div > div > div > div.Box.mr24 > div.Box > div > div > "
-            "div:nth-child(2) > div > div > div.Box.ShiftsBlock > div > div:nth-child(2) > div > div > "
+            selector="#react-app-root > div > div > div > div > div > div.Box.mv4.mh4 > div > div.Box > div > div > "
+            "div:nth-child(2) > div > div > div > div > div:nth-child(2) > div > div > "
             "div.Box.Box--row.ShiftCard.ShiftCard--card > div.Box.Box--ellipsis > div > "
             "div.Box.Box--row.Box--align-items-center.ShiftCard__status_and_scheduled > "
             "div.Box.Box--ellipsis.ShiftCard__time-range > span",
-            timeout=60,
+            timeout=10,
+            wait_until_visible=False,
         )
     ]
 

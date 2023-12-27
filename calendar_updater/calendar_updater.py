@@ -5,7 +5,7 @@ import os.path
 import google_api
 import homebase
 import my_studio
-from code_ninjas import CodeNinjasClass, get_class_from_time
+from code_ninjas import CodeNinjasClass, Sensei, get_class_from_time
 
 
 def create_settings_file() -> None:
@@ -58,6 +58,26 @@ def combine_duplicate_classes(*classes: CodeNinjasClass) -> list[CodeNinjasClass
         else:
             combined.append(code_ninjas_class)
 
+    return combined
+
+
+def add_senseis_to_classes(classes: list[CodeNinjasClass], senseis: list[Sensei]) -> None:
+    """
+    Adds senseis to classes.
+
+    Args:
+        classes: The classes to add senseis to.
+        senseis: The senseis to add to the classes.
+
+    Returns:
+        The classes with senseis added.
+    """
+
+    for code_ninjas_class in classes:
+        for sensei in senseis:
+            if code_ninjas_class.sensei_scheduled_for_class(sensei) and sensei not in code_ninjas_class.senseis:
+                code_ninjas_class.senseis.append(sensei)
+
 
 def main(headless_browser: bool = True, keep_chrome_open: bool = False) -> None:
     """
@@ -103,12 +123,14 @@ def main(headless_browser: bool = True, keep_chrome_open: bool = False) -> None:
         concurrent.futures.wait([mystudio_future, homebase_future])
 
         create_classes, jr_classes = mystudio_future.result()
-        homebase_classes = homebase_future.result()
+        senseis = homebase_future.result()
+
+    add_senseis_to_classes(create_classes, senseis)
 
     google_api.add_classes_to_calendar(
         credentials=creds,
         calendar_id=settings["googleAPI"]["calendarID"],
-        classes=combine_duplicate_classes(*create_classes, *jr_classes, *homebase_classes),
+        classes=combine_duplicate_classes(*create_classes, *jr_classes),
         unity_student_names=settings["students"]["unity"],
         focus_student_names=settings["students"]["focus"],
     )

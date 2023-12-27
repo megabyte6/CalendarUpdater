@@ -128,6 +128,23 @@ class CodeNinjasClass:
 
         return [sensei.name for sensei in self.senseis]
 
+    def sensei_scheduled_for_class(self, sensei: Sensei) -> bool:
+        """
+        Checks whether the given sensei is scheduled for this class.
+
+        Args:
+            sensei: The sensei to check.
+
+        Returns:
+            Whether the sensei is scheduled for this class.
+        """
+
+        start_time = datetime.datetime.combine(date=datetime.date.today(), time=self.start_time)
+        end_time = datetime.datetime.combine(date=datetime.date.today(), time=self.end_time)
+        sensei_start_time = datetime.datetime.combine(date=datetime.date.today(), time=sensei.start_time)
+        sensei_end_time = datetime.datetime.combine(date=datetime.date.today(), time=sensei.end_time)
+        return sensei_start_time <= start_time and sensei_end_time >= end_time
+
 
 def get_class_from_time(classes: list[CodeNinjasClass], time: datetime.time) -> CodeNinjasClass | None:
     """
