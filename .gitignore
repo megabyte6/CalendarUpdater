@@ -9,3 +9,6 @@ token.json
 
 # VSCode
 .vscode
+
+# Fleet
+.fleet
