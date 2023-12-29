@@ -79,13 +79,14 @@ def add_senseis_to_classes(classes: list[CodeNinjasClass], senseis: list[Sensei]
                 code_ninjas_class.senseis.append(sensei)
 
 
-def main(headless_browser: bool = True, keep_chrome_open: bool = False) -> None:
+def main(headless_browser: bool = True, keep_chrome_open: bool = False, remote_browser: bool = False) -> None:
     """
     Main function.
 
     Args:
         headless_browser: Whether to run the browser in headless mode.
         keep_chrome_open: Whether to keep the Chrome window open after the program is done.
+        remote_browser: Whether to use a remote browser (often when access a browser in a Docker container)
     """
 
     if not os.path.exists("settings.json"):
@@ -110,6 +111,7 @@ def main(headless_browser: bool = True, keep_chrome_open: bool = False) -> None:
             password=settings["myStudio"]["password"],
             headless_browser=headless_browser,
             keep_chrome_open=keep_chrome_open,
+            remote_browser=remote_browser
         )
         homebase_future = executor.submit(
             homebase.read_data_from_homebase,
@@ -117,6 +119,7 @@ def main(headless_browser: bool = True, keep_chrome_open: bool = False) -> None:
             password=settings["homebase"]["password"],
             headless_browser=headless_browser,
             keep_chrome_open=keep_chrome_open,
+            remote_browser=remote_browser
         )
 
         # Wait for functions to complete.

@@ -1,6 +1,6 @@
 import datetime
 
-from selenium.webdriver import Chrome, ChromeOptions
+from selenium.webdriver import Chrome, ChromeOptions, Remote
 from selenium.webdriver.support.ui import WebDriverWait
 
 from code_ninjas import CodeNinjasClass, Curriculum, Ninja, get_class_from_time
@@ -106,13 +106,14 @@ def read_class_data(driver: Chrome, curriculum: Curriculum) -> list[CodeNinjasCl
     return class_data
 
 
-def create_mystudio_webdriver(headless: bool = True, keep_open_on_finished: bool = False) -> Chrome:
+def create_mystudio_webdriver(headless: bool = True, keep_open_on_finished: bool = False, remote_browser: bool = False) -> Chrome:
     """
     Creates a Chrome webdriver for the MyStudio website.
 
     Args:
         headless: Whether to run the browser in headless mode.
         keep_open_on_finished: Whether to keep the Chrome window open after the program is done.
+        remote_browser: Whether to use a remote browser (often when access a browser in a Docker container).
 
     Returns:
         The Chrome webdriver.
@@ -124,8 +125,14 @@ def create_mystudio_webdriver(headless: bool = True, keep_open_on_finished: bool
         chrome_options.add_argument("--headless=new")
     if keep_open_on_finished:
         chrome_options.add_experimental_option("detach", True)
+    if remote_browser:
+        chrome_options.add_argument("--ignore-ssl-errors=yes")
+        chrome_options.add_argument("--ignore-certificate-errors")
 
-    return Chrome(options=chrome_options)
+    if remote_browser:
+        return Remote(command_executor="http://localhost:4444/wd/hub", options=chrome_options)
+    else:
+        return Chrome(options=chrome_options)
 
 
 def log_into_mystudio(driver: Chrome, username: str, password: str) -> None:
@@ -152,20 +159,23 @@ def read_data_from_mystudio(
     password: str,
     headless_browser: bool = True,
     keep_chrome_open: bool = False,
+    remote_browser: bool = False,
 ) -> tuple[list[CodeNinjasClass], list[CodeNinjasClass]]:
     """
     Reads today's class data from the MyStudio website.
 
     Args:
-        driver: The Chrome driver to use.
         username: The username to login with.
         password: The password to login with.
+        headless_browser: Whether to run the browser in headless mode.
+        keep_chrome_open: Whether to keep the Chrome window open after the program is done.
+        remote_browser: Whether to use a remote browser (often when access a browser in a Docker container).
 
     Returns:
         A tuple containing the CREATE classes and the JR classes.
     """
 
-    driver = create_mystudio_webdriver(headless=headless_browser, keep_open_on_finished=keep_chrome_open)
+    driver = create_mystudio_webdriver(headless=headless_browser, keep_open_on_finished=keep_chrome_open, remote_browser=remote_browser)
 
     driver.get("https://cn.mystudio.io/v43/WebPortal/#/login")
     log_into_mystudio(driver, username, password)

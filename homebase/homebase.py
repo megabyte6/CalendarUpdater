@@ -1,6 +1,6 @@
 from datetime import time
 
-from selenium.webdriver import Chrome, ChromeOptions
+from selenium.webdriver import Chrome, ChromeOptions, Remote
 
 from code_ninjas import Sensei
 from selenium_utils import element, elements
@@ -25,13 +25,14 @@ def convert_to_time(hours: int, minutes: int, period: str) -> time:
     return time(hour=hours, minute=minutes)
 
 
-def create_homebase_webdriver(headless: bool = True, keep_open_on_finished: bool = False) -> Chrome:
+def create_homebase_webdriver(headless: bool = True, keep_open_on_finished: bool = False, remote_browser: bool = False) -> Chrome:
     """
     Creates a Chrome webdriver for the Homebase website.
 
     Args:
         headless: Whether to run the browser in headless mode.
         keep_open_on_finished: Whether to keep the Chrome window open after the program is done.
+        remote_browser: Whether to use a remote browser (often when access a browser in a Docker container).
 
     Returns:
         The Chrome webdriver.
@@ -43,8 +44,14 @@ def create_homebase_webdriver(headless: bool = True, keep_open_on_finished: bool
         chrome_options.add_argument("--headless=new")
     if keep_open_on_finished:
         chrome_options.add_experimental_option("detach", True)
+    if remote_browser:
+        chrome_options.add_argument("--ignore-ssl-errors=yes")
+        chrome_options.add_argument("--ignore-certificate-errors")
 
-    return Chrome(options=chrome_options)
+    if remote_browser:
+        return Remote(command_executor="http://localhost:4445/wd/hub", options=chrome_options)
+    else:
+        return Chrome(options=chrome_options)
 
 
 def log_into_homebase(driver: Chrome, username: str, password: str) -> None:
@@ -67,6 +74,7 @@ def read_data_from_homebase(
     password: str,
     headless_browser: bool = True,
     keep_chrome_open: bool = False,
+    remote_browser: bool = False,
 ) -> list[Sensei]:
     """
     Reads the senseis' data from the Homebase website.
@@ -76,12 +84,13 @@ def read_data_from_homebase(
         password: The password to login with.
         headless_browser: Whether to run the browser in headless mode.
         keep_chrome_open: Whether to keep the Chrome window open after the program is done.
+        remote_browser: Whether to use a remote browser (often when access a browser in a Docker container).
 
     Returns:
         The senseis' data.
     """
 
-    driver = create_homebase_webdriver(headless=headless_browser, keep_open_on_finished=keep_chrome_open)
+    driver = create_homebase_webdriver(headless=headless_browser, keep_open_on_finished=keep_chrome_open, remote_browser=remote_browser)
 
     driver.get("https://app.joinhomebase.com")
     log_into_homebase(driver=driver, username=username, password=password)

@@ -4,7 +4,7 @@ __pycache__
 
 # App runtime data
 settings.json
-secret.json
+credentials.json
 token.json
 
 # VSCode

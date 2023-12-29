@@ -43,7 +43,6 @@ def element(
                 expected_conditions.visibility_of_element_located((locator_strategy, selector))
             )
         except TimeoutException as e:
-            print(f"Timeout occurred from element '{selector}' not being visible")
             driver.quit()
             raise e
     else:
@@ -53,7 +52,6 @@ def element(
                 expected_conditions.presence_of_element_located((locator_strategy, selector))
             )
         except TimeoutException as e:
-            print(f"Timeout occurred from element '{selector}' not being present in the DOM")
             driver.quit()
             raise e
 
@@ -103,6 +101,7 @@ def elements(
                 expected_conditions.presence_of_all_elements_located((locator_strategy, selector))
             )
         except TimeoutException as e:
+            print(f"Timeout from {selector} not existing in the DOM")
             driver.quit()
             raise e
 
