@@ -87,7 +87,7 @@ def add_classes_to_calendar(
 
             if code_ninjas_class.senseis:
                 sensei_details = [
-                    f"{sensei.name} ({sensei.start_time.strftime('%I:%M%P')} - {sensei.end_time.strftime('%I:%M%P')})"
+                    f"{sensei.name} ({sensei.start_time.strftime('%I:%M%p')} - {sensei.end_time.strftime('%I:%M%p')})"
                     for sensei in code_ninjas_class.senseis
                 ]
                 description += f"Sensei:\n{'\n'.join(sensei_details)}\n\n"
@@ -116,7 +116,7 @@ def add_classes_to_calendar(
             create_class_count = len(code_ninjas_class.create_students())
             jr_class_count = len(code_ninjas_class.jr_students())
             event = {
-                "summary": f"{code_ninjas_class.start_time.strftime('%I:%M%P')} - {create_class_count} | {jr_class_count}",
+                "summary": f"{code_ninjas_class.start_time.strftime('%I:%M%p')} - {create_class_count} | {jr_class_count}",
                 "description": description,
                 "start": {
                     "dateTime": f"{today}T{code_ninjas_class.start_time.strftime('%H:%M')}:00",
