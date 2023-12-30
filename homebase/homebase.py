@@ -53,7 +53,7 @@ def create_homebase_webdriver(
         chrome_options.add_argument("--ignore-certificate-errors")
 
     if remote_browser:
-        return Remote(command_executor="http://localhost:4445/wd/hub", options=chrome_options)
+        return Remote(command_executor="http://localhost:4444/wd/hub", options=chrome_options)
     else:
         return Chrome(options=chrome_options)
 
