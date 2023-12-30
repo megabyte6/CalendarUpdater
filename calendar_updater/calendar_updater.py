@@ -2,6 +2,8 @@ import concurrent.futures
 import json
 import os.path
 
+from selenium.common.exceptions import TimeoutException
+
 import google_api
 import homebase
 import my_studio
@@ -104,29 +106,36 @@ def main(headless_browser: bool = True, keep_chrome_open: bool = False, remote_b
 
     # Use a ThreadPoolExecutor to run the functions concurrently since they
     # interact with websites and take a while to run.
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        mystudio_future = executor.submit(
-            my_studio.read_data_from_mystudio,
-            username=settings["myStudio"]["username"],
-            password=settings["myStudio"]["password"],
-            headless_browser=headless_browser,
-            keep_chrome_open=keep_chrome_open,
-            remote_browser=remote_browser,
-        )
-        homebase_future = executor.submit(
-            homebase.read_data_from_homebase,
-            username=settings["homebase"]["username"],
-            password=settings["homebase"]["password"],
-            headless_browser=headless_browser,
-            keep_chrome_open=keep_chrome_open,
-            remote_browser=remote_browser,
-        )
+    try:
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            mystudio_future = executor.submit(
+                my_studio.read_data_from_mystudio,
+                username=settings["myStudio"]["username"],
+                password=settings["myStudio"]["password"],
+                headless_browser=headless_browser,
+                keep_chrome_open=keep_chrome_open,
+                remote_browser=remote_browser,
+                attempts=3,
+            )
+            homebase_future = executor.submit(
+                homebase.read_data_from_homebase,
+                username=settings["homebase"]["username"],
+                password=settings["homebase"]["password"],
+                headless_browser=headless_browser,
+                keep_chrome_open=keep_chrome_open,
+                remote_browser=remote_browser,
+            )
 
-        # Wait for functions to complete.
-        concurrent.futures.wait([mystudio_future, homebase_future])
+            # Wait for functions to complete.
+            concurrent.futures.wait([mystudio_future, homebase_future])
 
-        create_classes, jr_classes = mystudio_future.result()
-        senseis = homebase_future.result()
+            create_classes, jr_classes = mystudio_future.result()
+            senseis = homebase_future.result()
+
+    except TimeoutException as e:
+        print("An error occurred while reading data from websites.")
+        print(e)
+        return
 
     add_senseis_to_classes(create_classes, senseis)
 

@@ -1,5 +1,6 @@
 import datetime
 
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver import Chrome, ChromeOptions, Remote
 from selenium.webdriver.support.ui import WebDriverWait
 
@@ -164,6 +165,7 @@ def read_data_from_mystudio(
     headless_browser: bool = True,
     keep_chrome_open: bool = False,
     remote_browser: bool = False,
+    attempts: int = 1,
 ) -> tuple[list[CodeNinjasClass], list[CodeNinjasClass]]:
     """
     Reads today's class data from the MyStudio website.
@@ -174,62 +176,78 @@ def read_data_from_mystudio(
         headless_browser: Whether to run the browser in headless mode.
         keep_chrome_open: Whether to keep the Chrome window open after the program is done.
         remote_browser: Whether to use a remote browser (often when access a browser in a Docker container).
+        attempts: The number of times to attempt to read the data before giving up.
 
     Returns:
         A tuple containing the CREATE classes and the JR classes.
     """
 
-    driver = create_mystudio_webdriver(
-        headless=headless_browser,
-        keep_open_on_finished=keep_chrome_open,
-        remote_browser=remote_browser,
-    )
+    try:
+        driver = create_mystudio_webdriver(
+            headless=headless_browser,
+            keep_open_on_finished=keep_chrome_open,
+            remote_browser=remote_browser,
+        )
 
-    driver.get("https://cn.mystudio.io/v43/WebPortal/#/login")
-    print("(MyStudio) Logging in...")
-    log_into_mystudio(driver, username, password)
+        driver.get("https://cn.mystudio.io/v43/WebPortal/#/login")
+        print("(MyStudio) Logging in...")
+        log_into_mystudio(driver, username, password)
 
-    # Interacting with the submenu before the rest of the page loads causes
-    # Chrome to be redirected to the dashboard. Wait for the page to finish
-    # loading by checking for this loading symbol.
-    loading_spinner = element(
-        driver,
-        selector="#monthly > tbody > tr.ng-scope.parent > td:nth-child(3) > center[ng-show='sales_loading']",
-        timeout=60,
-        wait_until_visible=False,
-    )
+        # Interacting with the submenu before the rest of the page loads causes
+        # Chrome to be redirected to the dashboard. Wait for the page to finish
+        # loading by checking for this loading symbol.
+        loading_spinner = element(
+            driver,
+            selector="#monthly > tbody > tr.ng-scope.parent > td:nth-child(3) > center[ng-show='sales_loading']",
+            timeout=60,
+            wait_until_visible=False,
+        )
 
-    WebDriverWait(driver, timeout=60).until(
-        lambda _: is_stale(loading_spinner) or "none" in loading_spinner.value_of_css_property("display")
-    )
-    # Implicitly wait for 0.5 seconds to ensure that the data is completely loaded
-    driver.implicitly_wait(0.5)
+        WebDriverWait(driver, timeout=60).until(
+            lambda _: is_stale(loading_spinner) or "none" in loading_spinner.value_of_css_property("display")
+        )
+        # Implicitly wait for 0.5 seconds to ensure that the data is completely loaded
+        driver.implicitly_wait(0.5)
 
-    # Hover over the sidebar menu to access submenu
-    hover(driver, element(driver, selector="#operations > a > span", timeout=10))
-    # Navigate to the class schedule page
-    element(driver, selector="#sub_menu_class_appt_cal", timeout=5).click()
+        # Hover over the sidebar menu to access submenu
+        hover(driver, element(driver, selector="#operations > a > span", timeout=10))
+        # Navigate to the class schedule page
+        element(driver, selector="#sub_menu_class_appt_cal", timeout=5).click()
 
-    create_classes: list[CodeNinjasClass] = []
-    # Check if there are any CREATE classes today
-    if element_exists(
-        driver,
-        selector="#i-s-container > div > div:nth-child(1) > div:nth-child(2) > div > div > div.sheduled_child_list",
-        timeout=60,
-    ):
-        print("(MyStudio) Reading CREATE classes...")
-        create_classes = read_class_data(driver, Curriculum.CREATE)
+        create_classes: list[CodeNinjasClass] = []
+        # Check if there are any CREATE classes today
+        if element_exists(
+            driver,
+            selector="#i-s-container > div > div:nth-child(1) > div:nth-child(2) > div > div > div.sheduled_child_list",
+            timeout=60,
+        ):
+            print("(MyStudio) Reading CREATE classes...")
+            create_classes = read_class_data(driver, Curriculum.CREATE)
 
-    jr_classes: list[CodeNinjasClass] = []
-    # Check if there are any JR classes today. Timeout is 5 because the wait for the CREATE classes
-    # dropdown should already be enough.
-    if element_exists(
-        driver,
-        selector="#i-s-container > div > div:nth-child(1) > div:nth-child(3) > div > div > div.sheduled_child_list",
-        timeout=5,
-    ):
-        print("(MyStudio) Reading JR classes...")
-        jr_classes = read_class_data(driver, Curriculum.JR)
+        jr_classes: list[CodeNinjasClass] = []
+        # Check if there are any JR classes today. Timeout is 5 because the wait for the CREATE classes
+        # dropdown should already be enough.
+        if element_exists(
+            driver,
+            selector="#i-s-container > div > div:nth-child(1) > div:nth-child(3) > div > div > div.sheduled_child_list",
+            timeout=5,
+        ):
+            print("(MyStudio) Reading JR classes...")
+            jr_classes = read_class_data(driver, Curriculum.JR)
 
-    print("(MyStudio) Done reading student data.")
-    return create_classes, jr_classes
+        print("(MyStudio) Done reading student data.")
+        return create_classes, jr_classes
+
+    except TimeoutException as e:
+        print("(MyStudio) Error: Timed out while waiting for some element to load.")
+        if attempts > 1:
+            print(f"(MyStudio) Retrying ({attempts - 1} attempts left)...")
+            return read_data_from_mystudio(
+                username,
+                password,
+                headless_browser,
+                keep_chrome_open,
+                remote_browser,
+                attempts - 1,
+            )
+        raise e
