@@ -25,7 +25,11 @@ def convert_to_time(hours: int, minutes: int, period: str) -> time:
     return time(hour=hours, minute=minutes)
 
 
-def create_homebase_webdriver(headless: bool = True, keep_open_on_finished: bool = False, remote_browser: bool = False) -> Chrome:
+def create_homebase_webdriver(
+    headless: bool = True,
+    keep_open_on_finished: bool = False,
+    remote_browser: bool = False,
+) -> Chrome:
     """
     Creates a Chrome webdriver for the Homebase website.
 
@@ -90,11 +94,17 @@ def read_data_from_homebase(
         The senseis' data.
     """
 
-    driver = create_homebase_webdriver(headless=headless_browser, keep_open_on_finished=keep_chrome_open, remote_browser=remote_browser)
+    driver = create_homebase_webdriver(
+        headless=headless_browser,
+        keep_open_on_finished=keep_chrome_open,
+        remote_browser=remote_browser,
+    )
 
     driver.get("https://app.joinhomebase.com")
+    print("(Homebase) Logging in...")
     log_into_homebase(driver=driver, username=username, password=password)
 
+    print("(Homebase) Reading sensei names...")
     sensei_names = [
         name.text
         for name in elements(
@@ -108,6 +118,7 @@ def read_data_from_homebase(
             wait_until_visible=False,
         )
     ]
+    print("(Homebase) Reading sensei shifts...")
     sensei_shift_times = [
         time.text
         for time in elements(
@@ -122,6 +133,7 @@ def read_data_from_homebase(
         )
     ]
 
+    print("(Homebase) Adding senseis to classes...")
     senseis: list[Sensei] = []
     for name, shift_time in zip(sensei_names, sensei_shift_times):
         start_time, start_time_period, _, end_time, end_time_period = shift_time.strip(" /").split(" ")
@@ -135,4 +147,5 @@ def read_data_from_homebase(
             )
         )
 
+    print("(Homebase) Done reading sensei data.")
     return senseis

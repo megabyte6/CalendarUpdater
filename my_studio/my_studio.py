@@ -106,7 +106,11 @@ def read_class_data(driver: Chrome, curriculum: Curriculum) -> list[CodeNinjasCl
     return class_data
 
 
-def create_mystudio_webdriver(headless: bool = True, keep_open_on_finished: bool = False, remote_browser: bool = False) -> Chrome:
+def create_mystudio_webdriver(
+    headless: bool = True,
+    keep_open_on_finished: bool = False,
+    remote_browser: bool = False,
+) -> Chrome:
     """
     Creates a Chrome webdriver for the MyStudio website.
 
@@ -175,9 +179,14 @@ def read_data_from_mystudio(
         A tuple containing the CREATE classes and the JR classes.
     """
 
-    driver = create_mystudio_webdriver(headless=headless_browser, keep_open_on_finished=keep_chrome_open, remote_browser=remote_browser)
+    driver = create_mystudio_webdriver(
+        headless=headless_browser,
+        keep_open_on_finished=keep_chrome_open,
+        remote_browser=remote_browser,
+    )
 
     driver.get("https://cn.mystudio.io/v43/WebPortal/#/login")
+    print("(MyStudio) Logging in...")
     log_into_mystudio(driver, username, password)
 
     # Interacting with the submenu before the rest of the page loads causes
@@ -208,6 +217,7 @@ def read_data_from_mystudio(
         selector="#i-s-container > div > div:nth-child(1) > div:nth-child(2) > div > div > div.sheduled_child_list",
         timeout=60,
     ):
+        print("(MyStudio) Reading CREATE classes...")
         create_classes = read_class_data(driver, Curriculum.CREATE)
 
     jr_classes: list[CodeNinjasClass] = []
@@ -218,6 +228,8 @@ def read_data_from_mystudio(
         selector="#i-s-container > div > div:nth-child(1) > div:nth-child(3) > div > div > div.sheduled_child_list",
         timeout=5,
     ):
+        print("(MyStudio) Reading JR classes...")
         jr_classes = read_class_data(driver, Curriculum.JR)
 
+    print("(MyStudio) Done reading student data.")
     return create_classes, jr_classes

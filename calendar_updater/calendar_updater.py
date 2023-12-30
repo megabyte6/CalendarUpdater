@@ -111,7 +111,7 @@ def main(headless_browser: bool = True, keep_chrome_open: bool = False, remote_b
             password=settings["myStudio"]["password"],
             headless_browser=headless_browser,
             keep_chrome_open=keep_chrome_open,
-            remote_browser=remote_browser
+            remote_browser=remote_browser,
         )
         homebase_future = executor.submit(
             homebase.read_data_from_homebase,
@@ -119,7 +119,7 @@ def main(headless_browser: bool = True, keep_chrome_open: bool = False, remote_b
             password=settings["homebase"]["password"],
             headless_browser=headless_browser,
             keep_chrome_open=keep_chrome_open,
-            remote_browser=remote_browser
+            remote_browser=remote_browser,
         )
 
         # Wait for functions to complete.

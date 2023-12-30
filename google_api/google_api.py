@@ -39,9 +39,7 @@ def load_google_api_credentials(
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            flow = InstalledAppFlow.from_client_secrets_file(
-                secrets_file_path, api_scopes
-            )
+            flow = InstalledAppFlow.from_client_secrets_file(secrets_file_path, api_scopes)
             creds = flow.run_local_server(port=0)
 
         # Save the credentials for the next run
@@ -98,9 +96,7 @@ def add_classes_to_calendar(
 
             jr_students = code_ninjas_class.jr_students()
             if jr_students:
-                description += (
-                    f"JR:\n{'\n'.join([str(student) for student in jr_students])}\n\n"
-                )
+                description += f"JR:\n{'\n'.join([str(student) for student in jr_students])}\n\n"
 
             focus_students = code_ninjas_class.focus_students(focus_student_names)
             if focus_students:
@@ -127,9 +123,7 @@ def add_classes_to_calendar(
                     "timeZone": "America/Vancouver",
                 },
             }
-            event = (
-                service.events().insert(calendarId=calendar_id, body=event).execute()
-            )
+            event = service.events().insert(calendarId=calendar_id, body=event).execute()
             print(f"Class event created: {event.get('htmlLink')}")
 
     except HttpError as e:
