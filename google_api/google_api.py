@@ -116,11 +116,11 @@ def add_classes_to_calendar(
                 "description": description,
                 "start": {
                     "dateTime": f"{today}T{code_ninjas_class.start_time.strftime('%H:%M')}:00",
-                    "timeZone": "America/Vancouver",
+                    "timeZone": "Etc/UTC",
                 },
                 "end": {
                     "dateTime": f"{today}T{code_ninjas_class.end_time.strftime('%H:%M')}:00",
-                    "timeZone": "America/Vancouver",
+                    "timeZone": "Etc/UTC",
                 },
             }
             event = service.events().insert(calendarId=calendar_id, body=event).execute()
