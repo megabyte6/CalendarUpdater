@@ -88,7 +88,7 @@ def add_classes_to_calendar(
                     f"{sensei.name} ({sensei.start_time.strftime('%I:%M%p')} - {sensei.end_time.strftime('%I:%M%p')})"
                     for sensei in code_ninjas_class.senseis
                 ]
-                description += f"Sensei:\n{'\n'.join(sensei_details)}\n\n"
+                description += f"Senseis:\n{'\n'.join(sensei_details)}\n\n"
 
             unity_students = code_ninjas_class.unity_students(unity_student_names)
             if unity_students:
@@ -116,11 +116,11 @@ def add_classes_to_calendar(
                 "description": description,
                 "start": {
                     "dateTime": f"{today}T{code_ninjas_class.start_time.strftime('%H:%M')}:00",
-                    "timeZone": "Etc/UTC",
+                    "timeZone": "America/Vancouver",
                 },
                 "end": {
                     "dateTime": f"{today}T{code_ninjas_class.end_time.strftime('%H:%M')}:00",
-                    "timeZone": "Etc/UTC",
+                    "timeZone": "America/Vancouver",
                 },
             }
             event = service.events().insert(calendarId=calendar_id, body=event).execute()
