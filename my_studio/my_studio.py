@@ -158,6 +158,15 @@ def log_into_mystudio(driver: Chrome, username: str, password: str) -> None:
         "div > div > div > div:nth-child(2) > center > button",
     ).click()
 
+    # Get 2FA code
+    two_factor_auth = input("Enter 2FA code: ")
+    element(driver, selector="#login_otp").send_keys(two_factor_auth)
+    element(
+        driver,
+        selector="#tooltipBgHide > div.height_auto.ng-scope > div.bg-white.height-full-vh.ng-scope > div > div > "
+        "div > div > div:nth-child(5) > center > button",
+    ).click()
+
 
 def read_data_from_mystudio(
     username: str,
