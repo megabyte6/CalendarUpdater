@@ -16,6 +16,9 @@ def create_settings_file() -> None:
     """
 
     settings = {
+        "useRemoteBrowser": False,
+        "useHeadlessBrowser": True,
+        "leaveChromeOpen": False,
         "myStudio": {
             "username": "",
             "password": "",
@@ -81,7 +84,7 @@ def add_senseis_to_classes(classes: list[CodeNinjasClass], senseis: list[Sensei]
                 code_ninjas_class.senseis.append(sensei)
 
 
-def main(headless_browser: bool = True, keep_chrome_open: bool = False, remote_browser: bool = False) -> None:
+def main() -> None:
     """
     Main function.
 
@@ -112,18 +115,18 @@ def main(headless_browser: bool = True, keep_chrome_open: bool = False, remote_b
                 my_studio.read_data_from_mystudio,
                 username=settings["myStudio"]["username"],
                 password=settings["myStudio"]["password"],
-                headless_browser=headless_browser,
-                keep_chrome_open=keep_chrome_open,
-                remote_browser=remote_browser,
+                headless_browser=settings["useHeadlessBrowser"],
+                keep_chrome_open=settings["leaveChromeOpen"],
+                remote_browser=settings["useRemoteBrowser"],
                 attempts=3,
             )
             homebase_future = executor.submit(
                 homebase.read_data_from_homebase,
                 username=settings["homebase"]["username"],
                 password=settings["homebase"]["password"],
-                headless_browser=headless_browser,
-                keep_chrome_open=keep_chrome_open,
-                remote_browser=remote_browser,
+                headless_browser=settings["useHeadlessBrowser"],
+                keep_chrome_open=settings["leaveChromeOpen"],
+                remote_browser=settings["useRemoteBrowser"],
             )
 
             # Wait for functions to complete.
