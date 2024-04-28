@@ -1,5 +1,7 @@
 import datetime
 
+import tkinter
+import tkinter.simpledialog
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver import Chrome, ChromeOptions, Remote
 from selenium.webdriver.support.ui import WebDriverWait
@@ -159,13 +161,17 @@ def log_into_mystudio(driver: Chrome, username: str, password: str) -> None:
     ).click()
 
     # Get 2FA code
-    two_factor_auth = input("Enter 2FA code: ")
+    two_factor_auth = tkinter.simpledialog.askstring("Calendar Updater", "Enter MyStudio 2FA code:")
     element(driver, selector="#login_otp").send_keys(two_factor_auth)
     element(
         driver,
         selector="#tooltipBgHide > div.height_auto.ng-scope > div.bg-white.height-full-vh.ng-scope > div > div > "
         "div > div > div:nth-child(5) > center > button",
     ).click()
+
+    if "Invalid" in element(driver, selector="#otp_form > div > div", timeout=5, wait_until_visible=False).text:
+        print("(MyStudio) ERROR: Invalid 2FA code. Please try again.")
+        exit(1)
 
 
 def read_data_from_mystudio(
