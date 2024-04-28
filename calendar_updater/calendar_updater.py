@@ -80,7 +80,7 @@ def add_senseis_to_classes(classes: list[CodeNinjasClass], senseis: list[Sensei]
 
     for code_ninjas_class in classes:
         for sensei in senseis:
-            if code_ninjas_class.sensei_scheduled_for_class(sensei) and sensei not in code_ninjas_class.senseis:
+            if code_ninjas_class.is_scheduled(sensei) and sensei not in code_ninjas_class.senseis:
                 code_ninjas_class.senseis.append(sensei)
 
 
@@ -140,12 +140,12 @@ def main() -> None:
         print(e)
         return
 
-    add_senseis_to_classes(create_classes, senseis)
+    combined_classes = add_senseis_to_classes(combine_duplicate_classes(*create_classes, *jr_classes), senseis)
 
     google_api.add_classes_to_calendar(
         credentials=creds,
         calendar_id=settings["googleAPI"]["calendarID"],
-        classes=combine_duplicate_classes(*create_classes, *jr_classes),
+        classes=combined_classes,
         unity_student_names=settings["students"]["unity"],
         focus_student_names=settings["students"]["focus"],
     )
