@@ -109,7 +109,7 @@ def read_data_from_homebase(
         name.text
         for name in elements(
             driver,
-            selector="#react-app-root > div > div > div > div > div > div.Box.mv4.mh4 > div > div.Box > div > div > "
+            selector="#react-app-root > div > div > div > div > div > div.Box.mr24 > div.Box > div > div > "
             "div:nth-child(2) > div > div > div.Box.ShiftsBlock > div > div:nth-child(2) > div > div > "
             "div.Box.Box--row.ShiftCard.ShiftCard--card > div.Box.Box--ellipsis > div > "
             "div.Box.Box--row.Box--align-items-center.Box--justify-content-start.ShiftCard__name_and_role > "
@@ -123,8 +123,8 @@ def read_data_from_homebase(
         time.text
         for time in elements(
             driver,
-            selector="#react-app-root > div > div > div > div > div > div.Box.mv4.mh4 > div > div.Box > div > div > "
-            "div:nth-child(2) > div > div > div > div > div:nth-child(2) > div > div > "
+            selector="#react-app-root > div > div > div > div > div > div.Box.mr24 > div.Box > div > div > "
+            "div:nth-child(2) > div > div > div.Box.ShiftsBlock > div > div:nth-child(2) > div > div > "
             "div.Box.Box--row.ShiftCard.ShiftCard--card > div.Box.Box--ellipsis > div > "
             "div.Box.Box--row.Box--align-items-center.ShiftCard__status_and_scheduled > "
             "div.Box.Box--ellipsis.ShiftCard__time-range > span",
