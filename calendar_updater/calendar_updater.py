@@ -140,7 +140,8 @@ def main() -> None:
         print(e)
         return
 
-    combined_classes = add_senseis_to_classes(combine_duplicate_classes(*create_classes, *jr_classes), senseis)
+    combined_classes = combine_duplicate_classes(*create_classes, *jr_classes)
+    add_senseis_to_classes(combined_classes, senseis)
 
     google_api.add_classes_to_calendar(
         credentials=creds,
