@@ -1,5 +1,6 @@
 from datetime import time
 
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver import Chrome, ChromeOptions, Remote
 
 from code_ninjas import Sensei
@@ -105,33 +106,86 @@ def read_data_from_homebase(
     log_into_homebase(driver=driver, username=username, password=password)
 
     print("(Homebase) Reading sensei names...")
-    sensei_names = [
-        name.text
-        for name in elements(
-            driver,
-            selector="#react-app-root > div > div > div > div > div > div.Box.mr24 > div.Box > div > div > "
-            "div:nth-child(2) > div > div > div.Box.ShiftsBlock > div > div:nth-child(2) > div > div > "
-            "div.Box.Box--row.ShiftCard.ShiftCard--card > div.Box.Box--ellipsis > div > "
-            "div.Box.Box--row.Box--align-items-center.Box--justify-content-start.ShiftCard__name_and_role > "
-            "div:nth-child(1) > span",
-            timeout=10,
-            wait_until_visible=False,
-        )
+    sensei_names = []
+    sensei_name_element_selectors = [
+        # For medium width screens
+        "#react-app-root > div > div > div > div > div > div.Box.mv4.mh4 > div > div.Box > div > div > "
+        "div:nth-child(2) > div > div > div.Box.ShiftsBlock > div > div:nth-child(2) > div > div > "
+        "div.Box.Box--row.ShiftCard.ShiftCard--card > div.Box.Box--ellipsis > div > "
+        "div.Box.Box--row.Box--align-items-center.Box--justify-content-start.ShiftCard__name_and_role > "
+        "div:nth-child(1) > span",
+        # For large width screens
+        "#react-app-root > div > div > div > div > div > div.Box.mr24 > div.Box > div > div > div:nth-child(2) > "
+        "div > div > div.Box.ShiftsBlock > div > div:nth-child(2) > div > div > "
+        "div.Box.Box--row.ShiftCard.ShiftCard--card > div.Box.Box--ellipsis > div > "
+        "div.Box.Box--row.Box--align-items-center.Box--justify-content-start.ShiftCard__name_and_role > "
+        "div:nth-child(1) > span",
+        # For small width screens
+        "#react-app-root > div > div > div > div > div > div:nth-child(2) > div > div.Box > div > div > "
+        "div:nth-child(2) > div > div > div.Box.ShiftsBlock > div > div:nth-child(2) > div > div > "
+        "div.Box.Box--row.ShiftCard.ShiftCard--card > div.Box.Box--ellipsis > div:nth-child(1) > "
+        "div.Box.Box--row.Box--align-items-center.Box--justify-content-start.ShiftCard__name_and_role > "
+        "div:nth-child(1) > span",
     ]
+    for selector in sensei_name_element_selectors:
+        try:
+            sensei_names = [
+                name.text
+                for name in elements(
+                    driver,
+                    selector,
+                    timeout=5,
+                    wait_until_visible=False,
+                    quit_webdriver_on_timeout=False,
+                )
+            ]
+            break
+        except TimeoutException:
+            continue
+    if len(sensei_names) == 0:
+        driver.quit()
+        raise TimeoutException("Could not find sensei names on the Homebase website.")
+
     print("(Homebase) Reading sensei shifts...")
-    sensei_shift_times = [
-        time.text
-        for time in elements(
-            driver,
-            selector="#react-app-root > div > div > div > div > div > div.Box.mr24 > div.Box > div > div > "
-            "div:nth-child(2) > div > div > div.Box.ShiftsBlock > div > div:nth-child(2) > div > div > "
-            "div.Box.Box--row.ShiftCard.ShiftCard--card > div.Box.Box--ellipsis > div > "
-            "div.Box.Box--row.Box--align-items-center.ShiftCard__status_and_scheduled > "
-            "div.Box.Box--ellipsis.ShiftCard__time-range > span",
-            timeout=10,
-            wait_until_visible=False,
-        )
+    sensei_shift_times = []
+    sensei_shift_time_element_selectors = [
+        # For medium width screens
+        "#react-app-root > div > div > div > div > div > div.Box.mv4.mh4 > div > div.Box > div > div > "
+        "div:nth-child(2) > div > div > div.Box.ShiftsBlock > div > div:nth-child(2) > div > div > "
+        "div.Box.Box--row.ShiftCard.ShiftCard--card > div.Box.Box--ellipsis > div > "
+        "div.Box.Box--row.Box--align-items-center.ShiftCard__status_and_scheduled > "
+        "div.Box.Box--ellipsis.ShiftCard__time-range > span",
+        # For large width screens
+        "#react-app-root > div > div > div > div > div > div.Box.mr24 > div.Box > div > div > div:nth-child(2) > "
+        "div > div > div.Box.ShiftsBlock > div > div:nth-child(2) > div > div > "
+        "div.Box.Box--row.ShiftCard.ShiftCard--card > div.Box.Box--ellipsis > div > "
+        "div.Box.Box--row.Box--align-items-center.ShiftCard__status_and_scheduled > "
+        "div.Box.Box--ellipsis.ShiftCard__time-range > span",
+        # For small width screens
+        "#react-app-root > div > div > div > div > div > div:nth-child(2) > div > div.Box > div > div > "
+        "div:nth-child(2) > div > div > div.Box.ShiftsBlock > div > div:nth-child(2) > div > div > "
+        "div.Box.Box--row.ShiftCard.ShiftCard--card > div.Box.Box--ellipsis > div:nth-child(1) > "
+        "div.Box.Box--column.Box--justify-content-center.ShiftCard__status_and_scheduled > "
+        "div.Box.Box--ellipsis.ShiftCard__time-range.mt4 > span",
     ]
+    for selector in sensei_shift_time_element_selectors:
+        try:
+            sensei_shift_times = [
+                name.text
+                for name in elements(
+                    driver,
+                    selector,
+                    timeout=5,
+                    wait_until_visible=False,
+                    quit_webdriver_on_timeout=False,
+                )
+            ]
+            break
+        except TimeoutException:
+            continue
+    if len(sensei_shift_times) == 0:
+        driver.quit()
+        raise TimeoutException("Could not find sensei shifts on the Homebase website.")
 
     print("(Homebase) Adding senseis to classes...")
     senseis: list[Sensei] = []
