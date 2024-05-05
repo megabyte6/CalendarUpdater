@@ -13,7 +13,8 @@ def element(
     root: WebElement = None,
     locator_strategy=By.CSS_SELECTOR,
     timeout=0,
-    wait_until_visible: bool = True,
+    wait_until_visible=True,
+    quit_webdriver_on_timeout=True,
 ) -> WebElement:
     """
     Locates the WebElement by the given selector.
@@ -25,6 +26,7 @@ def element(
         locator_strategy: What strategy to use to locate the element.
         timeout: How long to wait for the element to be visible before stopping the program.
         wait_until_visible: Whether to wait for the element to be visible before returning it.
+        quit_webdriver_on_timeout: Whether to quit the driver if the element is not found before the timeout occurs.
 
     Returns:
         The WebElement that the given selector points to.
@@ -36,24 +38,21 @@ def element(
     if root is None:
         root = driver
 
-    if wait_until_visible:
-        # Wait for the element to be visible before returning the WebElement.
-        try:
+    try:
+        if wait_until_visible:
+            # Wait for the element to be visible before returning the WebElement.
             return WebDriverWait(driver=root, timeout=timeout).until(
                 expected_conditions.visibility_of_element_located((locator_strategy, selector))
             )
-        except TimeoutException as e:
-            driver.quit()
-            raise e
-    else:
-        # Wait for element to be present in the DOM before returning the WebElement.
-        try:
+        else:
+            # Wait for element to be present in the DOM before returning the WebElement.
             return WebDriverWait(driver=root, timeout=timeout).until(
                 expected_conditions.presence_of_element_located((locator_strategy, selector))
             )
-        except TimeoutException as e:
+    except TimeoutException as e:
+        if quit_webdriver_on_timeout:
             driver.quit()
-            raise e
+        raise e
 
 
 def elements(
@@ -63,6 +62,7 @@ def elements(
     locator_strategy=By.CSS_SELECTOR,
     timeout=0,
     wait_until_visible=True,
+    quit_webdriver_on_timeout=True,
 ) -> list[WebElement]:
     """
     Locates the WebElement by the given selector.
@@ -74,6 +74,7 @@ def elements(
         locator_strategy: What strategy to use to locate the element.
         timeout: How long to wait for the element to be visible before stopping the program.
         wait_until_visible: Whether to wait for the element to be visible before returning it.
+        quit_webdriver_on_timeout: Whether to quit the driver if the element is not found before the timeout occurs.
 
     Returns:
         The list of WebElements that the given selector points to.
@@ -85,25 +86,23 @@ def elements(
     if root is None:
         root = driver
 
-    if wait_until_visible:
-        # Wait for the elements to be visible before returning the list of WebElements.
-        try:
+    try:
+        if wait_until_visible:
+            # Wait for the elements to be visible before returning the list of WebElements.
             return WebDriverWait(driver=root, timeout=timeout).until(
                 expected_conditions.visibility_of_all_elements_located((locator_strategy, selector))
             )
-        except TimeoutException as e:
-            driver.quit()
-            raise e
-    else:
-        # Wait for element to be present in the DOM before returning the WebElement.
-        try:
+        else:
+            # Wait for element to be present in the DOM before returning the WebElement.
             return WebDriverWait(driver=root, timeout=timeout).until(
                 expected_conditions.presence_of_all_elements_located((locator_strategy, selector))
             )
-        except TimeoutException as e:
-            print(f"Timeout from {selector} not existing in the DOM")
+    except TimeoutException as e:
+        if quit_webdriver_on_timeout:
             driver.quit()
-            raise e
+        if not wait_until_visible:
+            e.add_note(f"Timeout from {selector} not existing in the DOM.")
+        raise e
 
 
 def element_exists(
