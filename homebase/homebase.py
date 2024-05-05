@@ -3,7 +3,7 @@ from datetime import time
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver import Chrome, ChromeOptions, Remote
 
-from code_ninjas import Sensei
+from school import Instructor
 from selenium_utils import element, elements
 
 
@@ -80,9 +80,9 @@ def read_data_from_homebase(
     headless_browser: bool = True,
     keep_chrome_open: bool = False,
     remote_browser: bool = False,
-) -> list[Sensei]:
+) -> list[Instructor]:
     """
-    Reads the senseis' data from the Homebase website.
+    Reads the instructors' data from the Homebase website.
 
     Args:
         username: The username to login with.
@@ -92,7 +92,7 @@ def read_data_from_homebase(
         remote_browser: Whether to use a remote browser (often when access a browser in a Docker container).
 
     Returns:
-        The senseis' data.
+        The instructors' data.
     """
 
     driver = create_homebase_webdriver(
@@ -105,9 +105,9 @@ def read_data_from_homebase(
     print("(Homebase) Logging in...")
     log_into_homebase(driver=driver, username=username, password=password)
 
-    print("(Homebase) Reading sensei names...")
-    sensei_names = []
-    sensei_name_element_selectors = [
+    print("(Homebase) Reading instructors' names...")
+    instructor_names = []
+    instructor_name_element_selectors = [
         # For medium width screens
         "#react-app-root > div > div > div > div > div > div.Box.mv4.mh4 > div > div.Box > div > div > "
         "div:nth-child(2) > div > div > div.Box.ShiftsBlock > div > div:nth-child(2) > div > div > "
@@ -127,9 +127,9 @@ def read_data_from_homebase(
         "div.Box.Box--row.Box--align-items-center.Box--justify-content-start.ShiftCard__name_and_role > "
         "div:nth-child(1) > span",
     ]
-    for selector in sensei_name_element_selectors:
+    for selector in instructor_name_element_selectors:
         try:
-            sensei_names = [
+            instructor_names = [
                 name.text
                 for name in elements(
                     driver,
@@ -142,13 +142,13 @@ def read_data_from_homebase(
             break
         except TimeoutException:
             continue
-    if len(sensei_names) == 0:
+    if len(instructor_names) == 0:
         driver.quit()
-        raise TimeoutException("Could not find sensei names on the Homebase website.")
+        raise TimeoutException("Could not find instructors' names on the Homebase website.")
 
-    print("(Homebase) Reading sensei shifts...")
-    sensei_shift_times = []
-    sensei_shift_time_element_selectors = [
+    print("(Homebase) Reading instructors' shifts...")
+    instructor_shift_times = []
+    instructor_shift_time_element_selectors = [
         # For medium width screens
         "#react-app-root > div > div > div > div > div > div.Box.mv4.mh4 > div > div.Box > div > div > "
         "div:nth-child(2) > div > div > div.Box.ShiftsBlock > div > div:nth-child(2) > div > div > "
@@ -168,9 +168,9 @@ def read_data_from_homebase(
         "div.Box.Box--column.Box--justify-content-center.ShiftCard__status_and_scheduled > "
         "div.Box.Box--ellipsis.ShiftCard__time-range.mt4 > span",
     ]
-    for selector in sensei_shift_time_element_selectors:
+    for selector in instructor_shift_time_element_selectors:
         try:
-            sensei_shift_times = [
+            instructor_shift_times = [
                 name.text
                 for name in elements(
                     driver,
@@ -183,23 +183,23 @@ def read_data_from_homebase(
             break
         except TimeoutException:
             continue
-    if len(sensei_shift_times) == 0:
+    if len(instructor_shift_times) == 0:
         driver.quit()
-        raise TimeoutException("Could not find sensei shifts on the Homebase website.")
+        raise TimeoutException("Could not find instructors' shifts on the Homebase website.")
 
-    print("(Homebase) Adding senseis to classes...")
-    senseis: list[Sensei] = []
-    for name, shift_time in zip(sensei_names, sensei_shift_times):
+    print("(Homebase) Adding instructors to sessions...")
+    instructors: list[Instructor] = []
+    for name, shift_time in zip(instructor_names, instructor_shift_times):
         start_time, start_time_period, _, end_time, end_time_period = shift_time.strip(" /").split(" ")
         start_time_hour, start_time_minute = start_time.split(":")
         end_time_hour, end_time_minute = end_time.split(":")
-        senseis.append(
-            Sensei(
+        instructors.append(
+            Instructor(
                 name=name,
                 start_time=convert_to_time(int(start_time_hour), int(start_time_minute), start_time_period),
                 end_time=convert_to_time(int(end_time_hour), int(end_time_minute), end_time_period),
             )
         )
 
-    print("(Homebase) Done reading sensei data.")
-    return senseis
+    print("(Homebase) Done reading instructors' data.")
+    return instructors

@@ -6,16 +6,16 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver import Chrome, ChromeOptions, Remote
 from selenium.webdriver.support.ui import WebDriverWait
 
-from code_ninjas import CodeNinjasClass, Curriculum, Ninja, get_class_from_time
+from school import Session, Curriculum, Student, get_session_from_time
 from selenium_utils import element, element_exists, elements, hover, is_stale
 
 
-def get_time_from_class_dropdown(text: str) -> datetime.time:
+def get_time_from_session_dropdown(text: str) -> datetime.time:
     """
-    Gets the time from the given class dropdown text.
+    Gets the time from the given session dropdown text.
 
     Args:
-        text: The class dropdown text.
+        text: The session dropdown text.
 
     Returns:
         The time as a time object.
@@ -30,18 +30,18 @@ def get_time_from_class_dropdown(text: str) -> datetime.time:
     return time
 
 
-def read_class_data(driver: Chrome, curriculum: Curriculum) -> list[CodeNinjasClass]:
+def read_session_data(driver: Chrome, curriculum: Curriculum) -> list[Session]:
     """
-    Reads the class data from the given dropdown element.
+    Reads the session data from the given dropdown element.
 
     Args:
-        curriculum: The curriculum the classes are in.
+        curriculum: The curriculum the sessions are in.
 
     Returns:
-        The class data as a list of classes.
+        The session data as a list of sessions.
     """
 
-    # Open dropdown showing classes for the day
+    # Open dropdown showing sessions for the day
     if curriculum == Curriculum.CREATE:
         dropdown = element(
             driver,
@@ -56,41 +56,41 @@ def read_class_data(driver: Chrome, curriculum: Curriculum) -> list[CodeNinjasCl
         )
     dropdown.click()
 
-    # Read data for today's classes
-    class_data: list[CodeNinjasClass] = []
-    class_elements = elements(
+    # Read data for today's sessions
+    session_data: list[Session] = []
+    session_elements = elements(
         driver,
         selector="div > ul > li",
         root=dropdown,
     )[1:]
-    if len(class_elements) == 0:
-        return class_data
-    for i in range(len(class_elements)):
-        time = get_time_from_class_dropdown(class_elements[i].text)
-        create_class = CodeNinjasClass(time)
-        class_data.append(create_class)
+    if len(session_elements) == 0:
+        return session_data
+    for i in range(len(session_elements)):
+        time = get_time_from_session_dropdown(session_elements[i].text)
+        create_session = Session(time)
+        session_data.append(create_session)
 
-    # Open the first class to check student data
-    class_elements[0].click()
-    for i in range(len(class_elements)):
-        class_dropdown_element = element(
+    # Open the first session to check student data
+    session_elements[0].click()
+    for i in range(len(session_elements)):
+        session_dropdown_element = element(
             driver,
             selector="#class_datatable_view > div > div:nth-child(5) > div:nth-child(2) > div",
         )
         if i != 0:
-            # Open the class dropdown
-            class_dropdown_element.click()
-            # Open the class
+            # Open the session dropdown
+            session_dropdown_element.click()
+            # Open the session
             element(
                 driver,
                 selector="#class_datatable_view > div > div:nth-child(5) > div:nth-child(2) > div > ul:nth-child(2) > "
                 f"li:nth-child({i + 1})",
             ).click()
 
-        # Get the time from the class dropdown text
-        time = get_time_from_class_dropdown(class_dropdown_element.text)
-        if not get_class_from_time(class_data, time):
-            raise ValueError(f"Time '{time}' not found in class data")
+        # Get the time from the session dropdown text
+        time = get_time_from_session_dropdown(session_dropdown_element.text)
+        if not get_session_from_time(session_data, time):
+            raise ValueError(f"Time '{time}' not found in session data")
         # Get the rows in the data table
         student_data_table = elements(
             driver,
@@ -99,14 +99,14 @@ def read_class_data(driver: Chrome, curriculum: Curriculum) -> list[CodeNinjasCl
             wait_until_visible=False,
         )
         for row in student_data_table:
-            get_class_from_time(class_data, time).students.append(
-                Ninja(element(driver, selector="td:nth-child(4) > span", root=row).text, curriculum)
+            get_session_from_time(session_data, time).students.append(
+                Student(element(driver, selector="td:nth-child(4) > span", root=row).text, curriculum)
             )
 
-    # Return to the page showing all types of classes
+    # Return to the page showing all types of sessions
     element(driver, selector="#class_datatable_view > div > span").click()
 
-    return class_data
+    return session_data
 
 
 def create_mystudio_webdriver(
@@ -181,9 +181,9 @@ def read_data_from_mystudio(
     keep_chrome_open: bool = False,
     remote_browser: bool = False,
     attempts: int = 1,
-) -> tuple[list[CodeNinjasClass], list[CodeNinjasClass]]:
+) -> tuple[list[Session], list[Session]]:
     """
-    Reads today's class data from the MyStudio website.
+    Reads today's session data from the MyStudio website.
 
     Args:
         username: The username to login with.
@@ -194,7 +194,7 @@ def read_data_from_mystudio(
         attempts: The number of times to attempt to read the data before giving up.
 
     Returns:
-        A tuple containing the CREATE classes and the JR classes.
+        A tuple containing the CREATE sessions and the JR session.
     """
 
     try:
@@ -226,32 +226,32 @@ def read_data_from_mystudio(
 
         # Hover over the sidebar menu to access submenu
         hover(driver, element(driver, selector="#operations > a > span", timeout=10))
-        # Navigate to the class schedule page
+        # Navigate to the session schedule page
         element(driver, selector="#sub_menu_class_appt_cal", timeout=5).click()
 
-        create_classes: list[CodeNinjasClass] = []
-        # Check if there are any CREATE classes today
+        create_sessions: list[Session] = []
+        # Check if there are any CREATE sessions today
         if element_exists(
             driver,
             selector="#i-s-container > div > div:nth-child(1) > div:nth-child(2) > div > div > div.sheduled_child_list",
             timeout=60,
         ):
-            print("(MyStudio) Reading CREATE classes...")
-            create_classes = read_class_data(driver, Curriculum.CREATE)
+            print("(MyStudio) Reading CREATE sessions...")
+            create_sessions = read_session_data(driver, Curriculum.CREATE)
 
-        jr_classes: list[CodeNinjasClass] = []
-        # Check if there are any JR classes today. Timeout is 5 because the wait for the CREATE classes
+        jr_session: list[Session] = []
+        # Check if there are any JR sessions today. Timeout is 5 because the wait for the CREATE sessions
         # dropdown should already be enough.
         if element_exists(
             driver,
             selector="#i-s-container > div > div:nth-child(1) > div:nth-child(3) > div > div > div.sheduled_child_list",
             timeout=5,
         ):
-            print("(MyStudio) Reading JR classes...")
-            jr_classes = read_class_data(driver, Curriculum.JR)
+            print("(MyStudio) Reading JR session...")
+            jr_session = read_session_data(driver, Curriculum.JR)
 
         print("(MyStudio) Done reading student data.")
-        return create_classes, jr_classes
+        return create_sessions, jr_session
 
     except TimeoutException as e:
         print("(MyStudio) Error: Timed out while waiting for some element to load.")

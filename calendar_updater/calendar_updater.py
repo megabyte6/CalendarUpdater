@@ -7,7 +7,7 @@ from selenium.common.exceptions import TimeoutException
 import google_api
 import homebase
 import my_studio
-from code_ninjas import CodeNinjasClass, Sensei, get_class_from_time
+from school import Session, Instructor, get_session_from_time
 
 
 def create_settings_file() -> None:
@@ -43,45 +43,45 @@ def create_settings_file() -> None:
         json.dump(settings, settings_file, indent=4)
 
 
-def combine_duplicate_classes(*classes: CodeNinjasClass) -> list[CodeNinjasClass]:
+def combine_duplicate_sessions(*sessions: Session) -> list[Session]:
     """
-    Combines classes with the same time.
+    Combines sessions with the same time.
 
     Args:
-        classes: The classes to combine.
+        sessions: The sessions to combine.
 
     Returns:
-        The combined classes.
+        The combined sessions.
     """
 
-    combined: list[CodeNinjasClass] = []
-    for code_ninjas_class in classes:
-        existing_class = get_class_from_time(combined, code_ninjas_class.start_time)
-        if existing_class:
-            existing_class.students.extend(code_ninjas_class.students)
-            existing_class.senseis.extend(code_ninjas_class.senseis)
+    combined: list[Session] = []
+    for session in sessions:
+        existing_session = get_session_from_time(combined, session.start_time)
+        if existing_session:
+            existing_session.students.extend(session.students)
+            existing_session.instructors.extend(session.instructors)
         else:
-            combined.append(code_ninjas_class)
+            combined.append(session)
 
     return combined
 
 
-def add_senseis_to_classes(classes: list[CodeNinjasClass], senseis: list[Sensei]) -> None:
+def add_instructors_to_sessions(sessions: list[Session], instructors: list[Instructor]) -> None:
     """
-    Adds senseis to classes.
+    Adds instructors to sessions.
 
     Args:
-        classes: The classes to add senseis to.
-        senseis: The senseis to add to the classes.
+        sessions: The sessions to add instructors to.
+        instructors: The instructors to add to the sessions.
 
     Returns:
-        The classes with senseis added.
+        The sessions with instructors added.
     """
 
-    for code_ninjas_class in classes:
-        for sensei in senseis:
-            if code_ninjas_class.is_scheduled(sensei) and sensei not in code_ninjas_class.senseis:
-                code_ninjas_class.senseis.append(sensei)
+    for session in sessions:
+        for instructor in instructors:
+            if session.is_scheduled(instructor) and instructor not in session.instructors:
+                session.instructors.append(instructor)
 
 
 def main() -> None:
@@ -132,21 +132,21 @@ def main() -> None:
             # Wait for functions to complete.
             concurrent.futures.wait([mystudio_future, homebase_future])
 
-            create_classes, jr_classes = mystudio_future.result()
-            senseis = homebase_future.result()
+            create_sessions, jr_sessions = mystudio_future.result()
+            instructors = homebase_future.result()
 
     except TimeoutException as e:
         print("An error occurred while reading data from websites.")
         print(e)
         return
 
-    combined_classes = combine_duplicate_classes(*create_classes, *jr_classes)
-    add_senseis_to_classes(combined_classes, senseis)
+    combined_sessions = combine_duplicate_sessions(*create_sessions, *jr_sessions)
+    add_instructors_to_sessions(combined_sessions, instructors)
 
-    google_api.add_classes_to_calendar(
+    google_api.add_sessions_to_calendar(
         credentials=creds,
         calendar_id=settings["googleAPI"]["calendarID"],
-        classes=combined_classes,
+        sessions=combined_sessions,
         unity_student_names=settings["students"]["unity"],
         focus_student_names=settings["students"]["focus"],
     )
